@@ -1,22 +1,23 @@
 {% extends 'base/main.html' %}
+{% load static %}
 
 {% block content %}
-
 <main>
+
     <section id="room-name-wrapper">
-        <p>Room Name: <span id="room-name"></span></p>
-
+        <p>Room Name: <span id="room-name">main</span></p>
     </section>
 
-    <section id="video-streams">
-        <div class="video-container" id="user-container-1">
-            <div class="username-wrapper"><span class="user-name">My Name</span></div>
-            <div class="video-player" id="user-1"></div>
-        </div>
+    <!-- JOIN BUTTON (REQUIRED FOR CAMERA PERMISSION) -->
+    <div style="text-align:center; margin: 10px;">
+        <button id="join-btn">Join Room</button>
+    </div>
 
-        
+    <section id="video-streams"></section>
 
-    </section>
 </main>
+
+<!-- ONLY ONE AGORA SDK -->
+<script src="{% static 'assets/AgoraRTC_N-4.24.2.js' %}"></script>
 <script src="{% static 'js/streams.js' %}"></script>
 {% endblock content %}
