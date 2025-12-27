@@ -1,51 +1,29 @@
 {% extends 'base/main.html' %}
-{% load static %}
-
 {% block content %}
-<main>
-    <section id="form-container">
-        <img id="logo" src="{% static 'images/chat-icon.png' %}" alt="Chat Icon">
 
-        <div>
-            <h1>Welcome to MyChat</h1>
-            <p>A group video calling application just for you!</p>
+<div class="lobby">
+    <h1>🎥 MyChat</h1>
 
-            <a href="/room/">Join Room</a>
-        </div>
-        <form id="form">
+    <form id="form">
+        <input name="room" placeholder="Room Name" required />
+        <button type="submit">Join Room</button>
+    </form>
+</div>
 
-            <div class="form-field">
-                <input type="text" name="room" placeholder="Enter a room name...." style="text-transform: uppercase;"/>
-            </div>
-            
+<script>
+document.getElementById('form').onsubmit = async (e) => {
+    e.preventDefault()
 
-            <div class="form-field">
-                <input type="submit" value="Join Stream" />
+    let room = e.target.room.value.toUpperCase()
+    let res = await fetch(`/get_token/?channel=${room}`)
+    let data = await res.json()
 
-            </div>
+    sessionStorage.setItem('room', room)
+    sessionStorage.setItem('uid', data.uid)
+    sessionStorage.setItem('token', data.token)
 
-        </form>
-    </section>
-</main>
-<script type-"text/javascript">
-    let form = document.getElementById('form')
-
-    let handleSubmit = async (e) => {
-        e.preventDefault()
-        let room = e.target.room.value.toUpperCase()
-        let response = await fetch('/get_token/?channel=${room}')
-        let data = await response.json()
-
-        let UID = data.uid
-        let token = data.token
-
-        sessionStorage.setItem('UID', UID)
-        sessionStorage.setItem('token', token)
-        sessionStorage.setItem('room', room)
-
-        window.open('/room/', '_self')
-
-    }
-    form.addEventListener('submit', handleSubmit)
+    window.location.href = '/room/'
+}
 </script>
-{% endblock content %}
+
+{% endblock %}

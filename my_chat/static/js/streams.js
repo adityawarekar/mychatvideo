@@ -1,110 +1,126 @@
-const APP_ID = '05895611c83b4515b2b8dc0dfe05f3b5'
-const CHANNEL = 'sessionStorage.getItem('room')
-const TOKEN = '00605895611c83b4515b2b8dc0dfe05f3b5IACrd5HuHu8JfYUtgbmabTCaVTTxLuDKQ8qaPRL0Yj+V42f+nQiGzqzzIgC4kS0Ecn9PaQQAAQByf09pAgByf09pAwByf09pBAByf09p'
-let UID = 29;
-const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
+const APP_ID = "05895611c83b4515b2b8dc0dfe05f3b5"
+
+const CHANNEL = sessionStorage.getItem("room")
+const TOKEN = sessionStorage.getItem("token")
+let UID = Number(sessionStorage.getItem("uid"))
+
+const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" })
 
 let localTracks = []
 let remoteUsers = {}
-let UID = null
 
-let joinAndDisplayLocalStream = async () => {
-    document.getElementById('room-name').innerText = CHANNEL
+// ================= START CALL =================
+async function startCall() {
+    document.getElementById("room-name").innerText = `Room: ${CHANNEL}`
 
-    client.on('user-published', handleUserJoined)
-    client.on('user-left', handleUserLeft)
+    UID = await client.join(APP_ID, CHANNEL, TOKEN, UID)
 
-    try{
-        UID = await client.join(APP_ID, CHANNEL, TOKEN, UID)
-    }catch(error){
-        console.error(error)
-        window.open('/', '_self')
-    }
-    
     localTracks = await AgoraRTC.createMicrophoneAndCameraTracks()
 
-    let member = await createMember()
+    // ✅ LOCAL CONTAINER (ONLY ONCE)
+    if (!document.getElementById(`user-container-${UID}`)) {
+        const localPlayer = `
+            <div class="video-container" id="user-container-${UID}">
+                <div class="video-player" id="user-${UID}"></div>
+                <div class="overlay">You</div>
+            </div>
+        `
+        document
+            .getElementById("video-streams")
+            .insertAdjacentHTML("beforeend", localPlayer)
+    }
 
-    let player = `<div  class="video-container" id="user-container-${UID}">
-                     <div class="video-player" id="user-${UID}"></div>
-                     <div class="username-wrapper"><span class="user-name">${member.name}</span></div>
-                  </div>`
-    
-    document.getElementById('video-streams').insertAdjacentHTML('beforeend', player)
     localTracks[1].play(`user-${UID}`)
-    await client.publish([localTracks[0], localTracks[1]])
+    await client.publish(localTracks)
+
+    client.on("user-published", handleUserPublished)
+    client.on("user-left", handleUserLeft)
 }
 
-let handleUserJoined = async (user, mediaType) => {
+// ================= REMOTE USER =================
+async function handleUserPublished(user, mediaType) {
     remoteUsers[user.uid] = user
     await client.subscribe(user, mediaType)
 
-    if (mediaType === 'video'){
-        let player = document.getElementById(`user-container-${user.uid}`)
-        if (player != null){
-            player.remove()
-        }
+    const containerId = `user-container-${user.uid}`
+    const playerId = `user-${user.uid}`
 
-        let member = await getMember(user)
-
-        player = `<div  class="video-container" id="user-container-${user.uid}">
-            <div class="video-player" id="user-${user.uid}"></div>
-            <div class="username-wrapper"><span class="user-name">${member.name}</span></div>
-        </div>`
-
-        document.getElementById('video-streams').insertAdjacentHTML('beforeend', player)
-        user.videoTrack.play(`user-${user.uid}`)
+    // ✅ CREATE REMOTE CONTAINER ONLY ONCE
+    if (!document.getElementById(containerId) && mediaType === "video") {
+        const remotePlayer = `
+            <div class="video-container" id="${containerId}">
+                <div class="video-player" id="${playerId}"></div>
+                <div class="overlay">User</div>
+            </div>
+        `
+        document
+            .getElementById("video-streams")
+            .insertAdjacentHTML("beforeend", remotePlayer)
     }
 
-    if (mediaType === 'audio'){
+    if (mediaType === "video") {
+        user.videoTrack.play(playerId)
+    }
+
+    if (mediaType === "audio") {
         user.audioTrack.play()
     }
 }
 
-let handleUserLeft = async (user) => {
+// ================= USER LEFT =================
+function handleUserLeft(user) {
     delete remoteUsers[user.uid]
-    document.getElementById(`user-container-${user.uid}`).remove()
+    document.getElementById(`user-container-${user.uid}`)?.remove()
 }
 
-let leaveAndRemoveLocalStream = async () => {
-    for(let i=0; localTracks.length > i; i++){
-        localTracks[i].stop()
-        localTracks[i].close()
+// ================= MIC TOGGLE =================
+const micBtn = document.getElementById("mic-btn")
 
-    }
-    await client.leave()
-    window.open('/','_self')
-}
+micBtn.onclick = async () => {
+    if (!localTracks.length) return
 
-let toggleCamera = async (e) => {
-    if(localTracks[1].muted){
-        await localTracks[1].setMuted(false)
-        e.target.style.backgroundColor = '#fff'
-
-    }else{
-        await localTracks[1].setMuted(true)
-        e.target.style.backgroundColor = 'rgb(255, 80, 80, 1)'
-    }
-}
-
-let toggleMic = async (e) => {
-    if(localTracks[0].muted){
+    if (localTracks[0].muted) {
         await localTracks[0].setMuted(false)
-        e.target.style.backgroundColor = '#fff'
-
-    }else{
+        micBtn.innerText = "🎤"
+    } else {
         await localTracks[0].setMuted(true)
-        e.target.style.backgroundColor = 'rgb(255, 80, 80, 1)'
+        micBtn.innerText = "🔇"
     }
-
 }
 
+// ================= CAMERA TOGGLE =================
+const cameraBtn = document.getElementById("camera-btn")
 
-joinAndDisplayLocalStream()
-document.getElementById('leave-btn').addEventListener('click', leaveAndRemoveLocalStream)
-document.getElementById('camera-btn').addEventListener('click', toggleCamera)
-document.getElementById('mic-btn').addEventListener('click', toggleCamera)
+cameraBtn.onclick = async () => {
+    if (!localTracks.length) return
 
+    const container = document.getElementById(`user-container-${UID}`)
+    const playerId = `user-${UID}`
 
+    if (!localTracks[1].muted) {
+        // CAMERA OFF
+        await localTracks[1].setMuted(true)
+        container.classList.add("camera-off")
+    } else {
+        // CAMERA ON
+        await localTracks[1].setMuted(false)
+        container.classList.remove("camera-off")
 
+        // ✅ replay on SAME container
+        setTimeout(() => {
+            localTracks[1].play(playerId)
+        }, 150)
+    }
+}
 
+// ================= LEAVE =================
+document.getElementById("leave-btn").onclick = async () => {
+    localTracks.forEach(track => {
+        track.stop()
+        track.close()
+    })
+    await client.leave()
+    window.location.href = "/"
+}
+
+startCall()

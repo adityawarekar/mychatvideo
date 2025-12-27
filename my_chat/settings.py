@@ -3,12 +3,11 @@ from dotenv import load_dotenv
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = 'django-insecure-dev'
+SECRET_KEY = 'dev'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -54,7 +53,7 @@ DATABASES = {
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'my_chat' / 'static',
+    BASE_DIR / 'my_chat' / 'static'   # 👈 MOST IMPORTANT FIX
 ]
 
 AGORA_APP_ID = os.getenv("AGORA_APP_ID")

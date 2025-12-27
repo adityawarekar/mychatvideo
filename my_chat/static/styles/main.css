@@ -1,64 +1,122 @@
-:root {
-    --shadow: 0 4px 6px rgba(0,0,0,0.1);
+* {
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
-    background-color: #e8e9ef;
+    margin: 0;
+    background: #f5f7fb;
+    color: #1f2937;
+}
+
+/* Lobby */
+.lobby {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.lobby input {
+    padding: 12px;
+    width: 260px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+}
+
+.lobby button {
+    margin-top: 12px;
+    padding: 12px 36px;
+    border-radius: 8px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+}
+
+/* Room header */
+#room-name {
+    text-align: center;
+    padding: 12px;
+    font-weight: 600;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
 }
 
 /* Video grid */
 #video-streams {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 12px;
-    width: 80%;
-    margin: 0 auto;
-    padding-top: 12px;
+    gap: 20px;
+    padding: 20px;
 }
 
-/* Each video tile */
+/* Video card */
 .video-container {
     position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
     background: black;
-    border-radius: 6px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: var(--shadow);
+    aspect-ratio: 16 / 9;
 }
 
-/* Agora wrapper */
-.video-player {
-    width: 100%;
-    height: 100%;
-}
-
-/* 🔥 REAL FIX — target injected structure */
-.video-player > div,
-.video-player > div > video {
+/* Video element */
+.video-player,
+.video-player video {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-control-wrapper{
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    column-gap: 1em;
-    position: fixed;
-    bottom: 20px
+/* Overlay name */
+.overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
 }
 
-.control-icon{
-    height: 20px;
-    width: 20px;
-    box-shadow: var(--shadow);
-    background-color: #fff;
-    cursor: pointer;
-    padding: 10px;
-    border-radius: 5px;
+/* CAMERA OFF STATE (NO BLACK TILE ISSUE) */
+.camera-off {
+    background: #e5e7eb;
 }
-#leave-btn{
-    background-color: rgb(255, 80, 80, 1);
+
+.camera-off .video-player {
+    display: none;
+}
+
+.camera-off::after {
+    content: "Camera Off";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Controls */
+#controls {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+#controls button {
+    background: white;
+    border: none;
+    padding: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,.15);
+    font-size: 18px;
 }
