@@ -3,9 +3,10 @@
 
 <div class="lobby">
     <h1>🎥 MyChat</h1>
+    <p>Connect with friends instantly</p>
 
     <form id="form">
-        <input name="room" placeholder="Room Name" required />
+        <input name="room" placeholder="Enter Room Name" required />
         <button type="submit">Join Room</button>
     </form>
 </div>
@@ -14,15 +15,21 @@
 document.getElementById('form').onsubmit = async (e) => {
     e.preventDefault()
 
-    let room = e.target.room.value.toUpperCase()
-    let res = await fetch(`/get_token/?channel=${room}`)
-    let data = await res.json()
+    const room = e.target.room.value.toUpperCase()
+    
+    try {
+        const res = await fetch(`/get_token/?channel=${room}`)
+        const data = await res.json()
 
-    sessionStorage.setItem('room', room)
-    sessionStorage.setItem('uid', data.uid)
-    sessionStorage.setItem('token', data.token)
+        sessionStorage.setItem('room', room)
+        sessionStorage.setItem('uid', data.uid)
+        sessionStorage.setItem('token', data.token)
 
-    window.location.href = '/room/'
+        window.location.href = '/room/'
+    } catch (error) {
+        console.error('Error:', error)
+        alert('Failed to join room. Please try again.')
+    }
 }
 </script>
 

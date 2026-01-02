@@ -2,13 +2,20 @@
 {% load static %}
 {% block content %}
 
-<div id="room-name"></div>
+<div id="room-header">
+    <div id="room-name">Room: </div>
+    <div class="participant-count">
+        <span id="participant-count">1 Participant</span>
+    </div>
+</div>
+
 <div id="video-streams"></div>
 
 <div id="controls">
-    <button id="mic-btn">🎤</button>
-    <button id="camera-btn">📷</button>
-    <button id="leave-btn">❌</button>
+    <button id="mic-btn" title="Microphone">🎤</button>
+    <button id="speaker-btn" title="Speaker">🔊</button>
+    <button id="camera-btn" title="Camera">📹</button>
+    <button id="leave-btn" title="Leave Call">❌</button>
 </div>
 
 <script src="{% static 'assets/AgoraRTC_N-4.24.2.js' %}"></script>

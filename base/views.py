@@ -3,6 +3,25 @@ from django.http import JsonResponse
 from agora_token_builder import RtcTokenBuilder
 from django.conf import settings
 import time, random
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+
+@login_required(login_url='login')
+def index(request):
+    return render(request, 'base/lobby.html')
+
+
+@login_required(login_url='login')
+def room(request):
+    return render(request, 'base/room.html')
+
+
+@login_required(login_url='login')
+def geToken(request):
+    # your existing token logic here
+    pass
+
 
 def index(request):
     return render(request, 'base/lobby.html')

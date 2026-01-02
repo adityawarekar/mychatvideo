@@ -16,7 +16,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'base',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -53,8 +55,12 @@ DATABASES = {
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'my_chat' / 'static'   # 👈 MOST IMPORTANT FIX
+    BASE_DIR / 'my_chat' / 'static'
 ]
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'login'
 
 AGORA_APP_ID = os.getenv("AGORA_APP_ID")
 AGORA_APP_CERTIFICATE = os.getenv("AGORA_APP_CERTIFICATE")
