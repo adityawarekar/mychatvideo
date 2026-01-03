@@ -3,25 +3,31 @@
 {% block content %}
 
 <div id="room-header">
-    <div id="room-name">Room: </div>
-    <div class="participant-count">
-        <span id="participant-count">1 Participant</span>
-    </div>
+    <div id="room-name">Room: {{ room.room_name }}</div>
 </div>
+
+{% if is_host %}
+    <p>👑 You are the host</p>
+    <button>Mute All</button>
+    <button>End Call</button>
+{% else %}
+    <p>Participant</p>
+{% endif %}
 
 <div id="video-streams"></div>
 
 <div id="controls">
-    <button id="mic-btn" title="Microphone">🎤</button>
-    <button id="speaker-btn" title="Speaker">🔊</button>
-    <button id="camera-btn" title="Camera">📹</button>
-    <button id="leave-btn" title="Leave Call">❌</button>
+    <button id="mic-btn">🎤</button>
+    <button id="speaker-btn">🔊</button>
+    <button id="camera-btn">📹</button>
+    <button id="leave-btn">❌</button>
 </div>
 
 <script src="{% static 'assets/AgoraRTC_N-4.24.2.js' %}"></script>
 <script src="{% static 'js/streams.js' %}"></script>
+
 <script>
-window.addEventListener("beforeunload", function () {
+window.addEventListener("beforeunload", () => {
     fetch("/accounts/logout/");
 });
 </script>
