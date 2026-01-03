@@ -20,5 +20,10 @@
 
 <script src="{% static 'assets/AgoraRTC_N-4.24.2.js' %}"></script>
 <script src="{% static 'js/streams.js' %}"></script>
+<script>
+window.addEventListener("beforeunload", function () {
+    fetch("/accounts/logout/");
+});
+</script>
 
 {% endblock %}

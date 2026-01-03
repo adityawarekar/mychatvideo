@@ -5,15 +5,22 @@ from django.conf import settings
 import time, random
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-
+from accounts.models import Profile
 
 @login_required(login_url='login')
 def index(request):
-    return render(request, 'base/lobby.html')
+    profiles = Profile.objects.exclude(user=request.user)
+    return render(request, 'base/lobby.html', {
+        'profiles': profiles
+    })
 
 
 @login_required(login_url='login')
 def room(request):
+    profile = Profile.objects.get(user=request.user)
+    profile.status = 'in_call'
+    profile.save()
+
     return render(request, 'base/room.html')
 
 

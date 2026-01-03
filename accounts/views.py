@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from .models import Profile
 
 def register_view(request):
     if request.method == "POST":
@@ -20,9 +21,10 @@ def register_view(request):
             password=password
         )
         login(request, user)
-        return redirect("home")   # your home page
+        return redirect("home")  
 
     return render(request, "accounts/register.html")
+
 
 
 def login_view(request):
@@ -31,18 +33,26 @@ def login_view(request):
         password = request.POST.get("password")
 
         user = authenticate(request, username=username, password=password)
-
         if user:
             login(request, user)
+
+            profile = Profile.objects.get(user=user)
+            profile.status = 'online'
+            profile.save()
+
             return redirect("home")
-        else:
-            return render(request, "accounts/login.html", {
-                "error": "Invalid credentials"
-            })
+
+        return render(request, "accounts/login.html", {
+            "error": "Invalid credentials"
+        })
 
     return render(request, "accounts/login.html")
 
 
 def logout_view(request):
+    profile = Profile.objects.get(user=request.user)
+    profile.status = 'offline'
+    profile.save()
+
     logout(request)
     return redirect("login")

@@ -2,13 +2,43 @@
 {% block content %}
 
 <div class="lobby">
+
+   
     <h1>🎥 MyChat</h1>
     <p>Connect with friends instantly</p>
 
+    
+    <div class="users">
+        <h3>👥 Users</h3>
+
+        {% if profiles %}
+            <ul>
+                {% for profile in profiles %}
+                    <li>
+                        <strong>{{ profile.user.username }}</strong>
+                        {% if profile.status == 'online' %}
+                            <span style="color: green;">🟢 Online</span>
+                        {% elif profile.status == 'in_call' %}
+                            <span style="color: orange;">🎥 In Call</span>
+                        {% else %}
+                            <span style="color: red;">🔴 Offline</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No other users yet</p>
+        {% endif %}
+    </div>
+
+    <hr>
+
+    
     <form id="form">
         <input name="room" placeholder="Enter Room Name" required />
         <button type="submit">Join Room</button>
     </form>
+
 </div>
 
 <script>
@@ -16,7 +46,7 @@ document.getElementById('form').onsubmit = async (e) => {
     e.preventDefault()
 
     const room = e.target.room.value.toUpperCase()
-    
+
     try {
         const res = await fetch(`/get_token/?channel=${room}`)
         const data = await res.json()
