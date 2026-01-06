@@ -9,96 +9,90 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" })
 let localAudioTrack = null
 let localVideoTrack = null
 let remoteUsers = {}
+
 let isCameraOn = true
 let isMicOn = true
 let isSpeakerOn = true
 
-// Audio quality settings
+// High-quality audio config
 const audioConfig = {
     encoderConfig: {
-        sampleRate: 48000,  // High quality audio
+        sampleRate: 48000,
         stereo: true,
-        bitrate: 128,       // Higher bitrate for better quality
+        bitrate: 128,
     },
-    ANS: true,              // Automatic Noise Suppression
-    AEC: true,              // Acoustic Echo Cancellation
-    AGC: true,              // Automatic Gain Control
+    ANS: true,
+    AEC: true,
+    AGC: true,
 }
-
 
 async function startCall() {
     document.getElementById("room-name").innerText = `Room: ${CHANNEL}`
 
     try {
         UID = await client.join(APP_ID, CHANNEL, TOKEN, UID)
+        console.log("✅ Joined channel with UID:", UID)
 
-        // Create audio track with high quality settings
+        // Create audio track
         localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack(audioConfig)
+        console.log("✅ Microphone track created")
+
+        // Create video track
         localVideoTrack = await AgoraRTC.createCameraVideoTrack({
             encoderConfig: {
                 width: 1280,
                 height: 720,
                 frameRate: 30,
-                bitrateMin: 600,
-                bitrateMax: 1000,
             }
         })
+        console.log("✅ Camera track created")
 
-        createVideoContainer(UID, "You", true)
-        localVideoTrack.play(`user-${UID}`)
-        
-        // Publish both tracks
+        // Create video container FIRST
+        createVideoContainer(UID, "You (Host)")
+
+        // Play video - DON'T mute it immediately
+        localVideoTrack.play(`user-${UID}`, { fit: "cover" })
+        console.log("✅ Local video playing")
+
+        // Publish tracks
         await client.publish([localAudioTrack, localVideoTrack])
+        console.log("✅ Published audio and video")
 
+        // Set up event listeners
         client.on("user-published", handleUserPublished)
         client.on("user-unpublished", handleUserUnpublished)
         client.on("user-left", handleUserLeft)
 
-        updateParticipantCount()
+        // Update button states
+        updateButtonStates()
 
-        console.log("Successfully joined channel")
-    } catch (error) {
-        console.error("Error joining channel:", error)
-        alert("Failed to join the room. Please check your connection.")
+    } catch (err) {
+        console.error("❌ Error starting call:", err)
+        alert("Failed to join room: " + err.message)
     }
 }
 
-
 async function handleUserPublished(user, mediaType) {
+    console.log("👤 User published:", user.uid, "Media:", mediaType)
+    
     remoteUsers[user.uid] = user
     await client.subscribe(user, mediaType)
 
-    console.log(`User ${user.uid} published ${mediaType}`)
-
     if (mediaType === "video") {
-        createVideoContainer(user.uid, "User", false)
-        user.videoTrack.play(`user-${user.uid}`)
+        createVideoContainer(user.uid, `User ${user.uid}`)
+        user.videoTrack.play(`user-${user.uid}`, { fit: "cover" })
+        console.log("✅ Remote video playing for user:", user.uid)
     }
 
     if (mediaType === "audio") {
-        // Play audio with full volume
         user.audioTrack.play()
-        user.audioTrack.setVolume(100)
-        
-        // Add audio level indicator
-        user.audioTrack.on("volume-indicator", (volume) => {
-            const audioIndicator = document.getElementById(`audio-${user.uid}`)
-            if (audioIndicator) {
-                if (volume > 10) {
-                    audioIndicator.classList.add("speaking")
-                } else {
-                    audioIndicator.classList.remove("speaking")
-                }
-            }
-        })
+        user.audioTrack.setVolume(isSpeakerOn ? 100 : 0)
+        console.log("✅ Remote audio playing for user:", user.uid)
     }
-
-    updateParticipantCount()
 }
 
-
 function handleUserUnpublished(user, mediaType) {
-    console.log(`User ${user.uid} unpublished ${mediaType}`)
+    console.log("👤 User unpublished:", user.uid, "Media:", mediaType)
     
     if (mediaType === "video") {
         const container = document.getElementById(`user-container-${user.uid}`)
@@ -108,140 +102,121 @@ function handleUserUnpublished(user, mediaType) {
     }
 }
 
-
 function handleUserLeft(user) {
-    console.log(`User ${user.uid} left`)
+    console.log("👋 User left:", user.uid)
     delete remoteUsers[user.uid]
     document.getElementById(`user-container-${user.uid}`)?.remove()
-    updateParticipantCount()
 }
 
+function createVideoContainer(uid, name) {
+    if (document.getElementById(`user-container-${uid}`)) {
+        console.log("⚠️ Container already exists for:", uid)
+        return
+    }
 
-function createVideoContainer(uid, name, isLocal) {
-    if (document.getElementById(`user-container-${uid}`)) return
-    
-    const container = `
+    const html = `
         <div class="video-container" id="user-container-${uid}">
             <div class="video-player" id="user-${uid}"></div>
             <div class="user-info">
                 <div class="user-name">${name}</div>
-                <div class="audio-indicator" id="audio-${uid}">
-                    <span>🔊</span>
-                </div>
             </div>
         </div>
     `
-    document.getElementById('video-streams').insertAdjacentHTML('beforeend', container)
+    document.getElementById("video-streams").insertAdjacentHTML("beforeend", html)
+    console.log("✅ Created video container for:", uid)
 }
 
+/* ================= CONTROLS WITH VISUAL FEEDBACK ================= */
 
-function updateParticipantCount() {
-    const count = Object.keys(remoteUsers).length + 1
-    const element = document.getElementById('participant-count')
-    if (element) {
-        element.innerText = `${count} Participant${count > 1 ? 's' : ''}`
-    }
-}
-
-
-// Microphone control
-const micBtn = document.getElementById("mic-btn")
-micBtn.onclick = async () => {
+document.getElementById("mic-btn").onclick = async () => {
     if (!localAudioTrack) return
-
+    
     isMicOn = !isMicOn
     await localAudioTrack.setEnabled(isMicOn)
-
-    if (isMicOn) {
-        micBtn.classList.remove('muted')
-        micBtn.innerText = "🎤"
-    } else {
-        micBtn.classList.add('muted')
-        micBtn.innerText = "🔇"
-    }
+    updateButtonStates()
+    
+    console.log(isMicOn ? "🎤 Mic ON" : "🔇 Mic OFF")
 }
 
+document.getElementById("camera-btn").onclick = async () => {
+    if (!localVideoTrack) return
 
-// Speaker control (mute all remote audio)
-const speakerBtn = document.getElementById("speaker-btn")
-speakerBtn.onclick = () => {
+    isCameraOn = !isCameraOn
+    await localVideoTrack.setEnabled(isCameraOn)
+
+    const container = document.getElementById(`user-container-${UID}`)
+    if (container) {
+        container.classList.toggle("camera-off", !isCameraOn)
+    }
+    
+    updateButtonStates()
+    console.log(isCameraOn ? "📹 Camera ON" : "📹 Camera OFF")
+}
+
+document.getElementById("speaker-btn").onclick = () => {
     isSpeakerOn = !isSpeakerOn
-
-    // Mute/unmute all remote users
+    
     Object.values(remoteUsers).forEach(user => {
         if (user.audioTrack) {
             user.audioTrack.setVolume(isSpeakerOn ? 100 : 0)
         }
     })
-
-    if (isSpeakerOn) {
-        speakerBtn.classList.remove('muted')
-        speakerBtn.innerText = "🔊"
-    } else {
-        speakerBtn.classList.add('muted')
-        speakerBtn.innerText = "🔇"
-    }
+    
+    updateButtonStates()
+    console.log(isSpeakerOn ? "🔊 Speaker ON" : "🔇 Speaker OFF")
 }
 
-
-// Camera control
-const cameraBtn = document.getElementById("camera-btn")
-cameraBtn.onclick = async () => {
-    const container = document.getElementById(`user-container-${UID}`)
-    const playerId = `user-${UID}`
-
-    if (isCameraOn) {
-        // Turn camera OFF
-        if (localVideoTrack) {
-            await localVideoTrack.setEnabled(false)
-            container.classList.add("camera-off")
-            cameraBtn.classList.add('off')
-            cameraBtn.innerText = "📷"
-            isCameraOn = false
-        }
-    } else {
-        // Turn camera ON
-        if (localVideoTrack) {
-            await localVideoTrack.setEnabled(true)
-            container.classList.remove("camera-off")
-            cameraBtn.classList.remove('off')
-            cameraBtn.innerText = "📹"
-            isCameraOn = true
-        } else {
-            // Recreate video track if it was closed
-            localVideoTrack = await AgoraRTC.createCameraVideoTrack()
-            const playerDiv = document.getElementById(playerId)
-            playerDiv.innerHTML = ""
-            localVideoTrack.play(playerId)
-            await client.publish([localVideoTrack])
-            container.classList.remove("camera-off")
-            cameraBtn.classList.remove('off')
-            cameraBtn.innerText = "📹"
-            isCameraOn = true
-        }
-    }
-}
-
-
-// Leave call
 document.getElementById("leave-btn").onclick = async () => {
-    // Stop and close tracks
-    if (localAudioTrack) {
-        localAudioTrack.stop()
-        localAudioTrack.close()
-    }
-    if (localVideoTrack) {
-        localVideoTrack.stop()
-        localVideoTrack.close()
-    }
-
-    // Leave channel
+    console.log("👋 Leaving call...")
+    
+    localAudioTrack?.stop()
+    localVideoTrack?.stop()
+    localAudioTrack?.close()
+    localVideoTrack?.close()
+    
     await client.leave()
-
-    // Redirect
     window.location.href = "/"
 }
 
+// Update button visual states
+function updateButtonStates() {
+    const micBtn = document.getElementById("mic-btn")
+    const cameraBtn = document.getElementById("camera-btn")
+    const speakerBtn = document.getElementById("speaker-btn")
+
+    // Mic button
+    if (isMicOn) {
+        micBtn.classList.remove("muted")
+        micBtn.classList.add("active")
+        micBtn.textContent = "🎤"
+    } else {
+        micBtn.classList.add("muted")
+        micBtn.classList.remove("active")
+        micBtn.textContent = "🔇"
+    }
+
+    // Camera button
+    if (isCameraOn) {
+        cameraBtn.classList.remove("off")
+        cameraBtn.classList.add("active")
+        cameraBtn.textContent = "📹"
+    } else {
+        cameraBtn.classList.add("off")
+        cameraBtn.classList.remove("active")
+        cameraBtn.textContent = "📹"
+    }
+
+    // Speaker button
+    if (isSpeakerOn) {
+        speakerBtn.classList.remove("muted")
+        speakerBtn.classList.add("active")
+        speakerBtn.textContent = "🔊"
+    } else {
+        speakerBtn.classList.add("muted")
+        speakerBtn.classList.remove("active")
+        speakerBtn.textContent = "🔇"
+    }
+}
 
 // Start the call
 startCall()

@@ -7,6 +7,9 @@ from accounts.models import Profile
 from .models import Room
 import time, random
 
+def home(request):
+    return render(request, 'base/home.html')
+
 
 @login_required(login_url='login')
 def index(request):

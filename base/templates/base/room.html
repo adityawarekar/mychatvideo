@@ -6,30 +6,149 @@
     <div id="room-name">Room: {{ room.room_name }}</div>
 </div>
 
-{% if is_host %}
-    <p>👑 You are the host</p>
-    <button>Mute All</button>
-    <button>End Call</button>
-{% else %}
-    <p>Participant</p>
-{% endif %}
-
 <div id="video-streams"></div>
 
+<div id="chat-box">
+    <div id="messages"></div>
+    <input id="chat-input" placeholder="Type a message..." />
+    <button id="send-btn">Send</button>
+</div>
+
 <div id="controls">
-    <button id="mic-btn">🎤</button>
-    <button id="speaker-btn">🔊</button>
-    <button id="camera-btn">📹</button>
+    <button id="mic-btn" class="active">🎤</button>
+    <button id="speaker-btn" class="active">🔊</button>
+    <button id="camera-btn" class="active">📹</button>
     <button id="leave-btn">❌</button>
 </div>
 
+<!-- Agora SDK -->
 <script src="{% static 'assets/AgoraRTC_N-4.24.2.js' %}"></script>
-<script src="{% static 'js/streams.js' %}"></script>
 
+<!-- Chat WebSocket with Device Identifier -->
 <script>
-window.addEventListener("beforeunload", () => {
-    fetch("/accounts/logout/");
-});
+const roomName = "{{ room.room_name }}"
+
+// 🔥 FIX: Create unique display name with device identifier
+let currentUser = "{{ request.user.username }}"
+let displayName = currentUser
+
+// Check if user is guest/anonymous
+if (!currentUser || currentUser === "" || currentUser === "AnonymousUser") {
+    currentUser = localStorage.getItem('guestUsername')
+    
+    if (!currentUser) {
+        const guestId = Math.floor(Math.random() * 10000)
+        currentUser = "Guest_" + guestId
+        localStorage.setItem('guestUsername', currentUser)
+    }
+    displayName = currentUser
+} else {
+    // 🎯 For logged-in users: Add device identifier to distinguish multiple devices
+    let deviceId = localStorage.getItem('deviceId')
+    
+    if (!deviceId) {
+        // Generate unique device ID
+        deviceId = Math.random().toString(36).substring(2, 8).toUpperCase()
+        localStorage.setItem('deviceId', deviceId)
+    }
+    
+    // Create display name: "username (Device-ABC123)"
+    displayName = currentUser + " (Device-" + deviceId + ")"
+}
+
+console.log("👤 Display Name:", displayName)
+console.log("🚀 Initializing WebSocket for room:", roomName)
+
+// Auto detect protocol
+const protocol = window.location.protocol === "https:" ? "wss://" : "ws://"
+const wsUrl = protocol + window.location.host + "/ws/chat/" + roomName + "/"
+
+let ws = null
+let isConnected = false
+
+function connectWebSocket() {
+    ws = new WebSocket(wsUrl)
+
+    ws.onopen = function() {
+        console.log("✅ WebSocket connected")
+        isConnected = true
+    }
+
+    ws.onclose = function(e) {
+        console.error("❌ WebSocket closed:", e.code, e.reason)
+        isConnected = false
+        
+        setTimeout(() => {
+            console.log("🔄 Attempting to reconnect...")
+            connectWebSocket()
+        }, 3000)
+    }
+
+    ws.onerror = function(e) {
+        console.error("❌ WebSocket error:", e)
+        isConnected = false
+    }
+
+    ws.onmessage = function(e) {
+        console.log("📨 Message received:", e.data)
+        
+        try {
+            const data = JSON.parse(e.data)
+            const messages = document.getElementById("messages")
+            
+            const messageEl = document.createElement("p")
+            messageEl.innerHTML = `<strong>${data.user}:</strong> ${data.message}`
+            messages.appendChild(messageEl)
+            
+            messages.scrollTop = messages.scrollHeight
+            
+        } catch (err) {
+            console.error("❌ Error parsing message:", err)
+        }
+    }
+}
+
+connectWebSocket()
+
+document.getElementById("send-btn").onclick = function() {
+    sendMessage()
+}
+
+document.getElementById("chat-input").onkeypress = function(e) {
+    if (e.key === "Enter") {
+        sendMessage()
+    }
+}
+
+function sendMessage() {
+    const input = document.getElementById("chat-input")
+    const message = input.value.trim()
+    
+    if (message === "") return
+    
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.error("❌ WebSocket not connected. State:", ws ? ws.readyState : "null")
+        alert("Chat is not connected. Please wait a moment and try again.")
+        return
+    }
+    
+    console.log("📤 Sending message:", message)
+    
+    try {
+        ws.send(JSON.stringify({
+            message: message,
+            user: displayName  // 🎯 Send display name with device identifier
+        }))
+        
+        input.value = ""
+    } catch (err) {
+        console.error("❌ Error sending message:", err)
+        alert("Failed to send message. Please try again.")
+    }
+}
 </script>
+
+<!-- Agora Camera / Mic Logic -->
+<script src="{% static 'js/streams.js' %}"></script>
 
 {% endblock %}

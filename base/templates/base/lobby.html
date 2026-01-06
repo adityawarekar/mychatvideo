@@ -2,63 +2,488 @@
 {% block content %}
 
 <div class="lobby">
+    <div class="lobby-container">
+        <!-- LOGO & HEADER -->
+        <div class="lobby-header">
+            <div class="logo">
+                <span class="logo-icon">📹</span>
+                <h1>MyChat</h1>
+            </div>
+            <p class="tagline">Connect instantly with high-quality video calls</p>
+        </div>
 
-    <!-- HEADER -->
-    <h1>🎥 MyChat</h1>
-    <p>Connect with friends instantly</p>
+        <!-- MAIN CONTENT GRID -->
+        <div class="lobby-content">
+            <!-- CENTER: ROOM FORM -->
+            <div class="room-section">
+                <div class="section-card">
+                    <h2>🚀 Start or Join Meeting</h2>
+                    
+                    <form id="form">
+                        <!-- Room Name Input -->
+                        <div class="input-group">
+                            <label for="room-input">Meeting Room Name</label>
+                            <input 
+                                id="room-input"
+                                name="room" 
+                                type="text"
+                                placeholder="Enter room name (e.g., TEAM-MEETING)" 
+                                required 
+                            />
+                        </div>
 
-    <!-- USERS PRESENCE (STEP 2) -->
-    <div class="users">
-        <h3>👥 Users</h3>
+                        <!-- Private Room Toggle -->
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="private" id="private-checkbox" />
+                                <span class="checkbox-text">
+                                    <strong>🔒 Private Room</strong>
+                                    <small>Require password to join</small>
+                                </span>
+                            </label>
+                        </div>
 
-        {% if profiles %}
-            <ul>
-                {% for profile in profiles %}
-                    <li>
-                        <strong>{{ profile.user.username }}</strong>
-                        {% if profile.status == 'online' %}
-                            <span style="color: green;">🟢 Online</span>
-                        {% elif profile.status == 'in_call' %}
-                            <span style="color: orange;">🎥 In Call</span>
-                        {% else %}
-                            <span style="color: red;">🔴 Offline</span>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No other users yet</p>
-        {% endif %}
+                        <!-- Password Field (Hidden by default) -->
+                        <div class="input-group" id="password-group" style="display: none;">
+                            <label for="password-field">Room Password</label>
+                            <input
+                                id="password-field"
+                                name="password"
+                                type="password"
+                                placeholder="Create a secure password"
+                            />
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="button-group">
+                            <button type="submit" class="btn-primary">
+                                <span>Join Meeting</span>
+                                <span class="btn-icon">→</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Quick Info -->
+                    <div class="quick-info">
+                        <div class="info-item">
+                            <span class="info-icon">✓</span>
+                            <span>HD Video & Audio</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">✓</span>
+                            <span>Real-time Chat</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">✓</span>
+                            <span>Screen Sharing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <hr>
-
-    <!-- ROOM FORM (STEP 3 + STEP 6 ADDED HERE) -->
-    <form id="form">
-        <input name="room" placeholder="Enter Room Name" required />
-
-        <label>
-            <input type="checkbox" name="private" />
-            Private Room
-        </label>
-
-        <input
-            name="password"
-            placeholder="Room Password (only for private room)"
-        />
-
-        <button type="submit">Join Room</button>
-    </form>
-
 </div>
 
+<style>
+/* ========== LOBBY SPECIFIC STYLES ========== */
+.lobby-container {
+    max-width: 1200px;
+    width: 100%;
+    padding: 2rem;
+}
+
+.lobby-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeIn 0.6s ease;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.logo-icon {
+    font-size: 3rem;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.logo h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+}
+
+.tagline {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+/* ========== CONTENT GRID ========== */
+.lobby-content {
+    display: flex;
+    justify-content: center;
+    animation: fadeIn 0.8s ease 0.2s both;
+}
+
+.room-section {
+    max-width: 550px;
+    width: 100%;
+}
+
+.section-card {
+    background: rgba(255, 255, 255, 0.98);
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.section-card h2 {
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ========== FORM STYLES ========== */
+#form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-group label {
+    color: #374151;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.input-group input[type="text"],
+.input-group input[type="password"] {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 15px;
+    background: #f9fafb;
+    color: #1f2937;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #0b5cff;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(11, 92, 255, 0.1);
+}
+
+.input-group input::placeholder {
+    color: #9ca3af;
+}
+
+/* ========== CHECKBOX STYLES ========== */
+.checkbox-group {
+    margin: 0.5rem 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    padding: 14px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.checkbox-label:hover {
+    background: #e5e7eb;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    accent-color: #0b5cff;
+    margin-top: 2px;
+}
+
+.checkbox-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.checkbox-text strong {
+    color: #1f2937;
+    font-size: 15px;
+}
+
+.checkbox-text small {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* ========== BUTTON STYLES ========== */
+.button-group {
+    margin-top: 1rem;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #0b5cff 0%, #2d7aff 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(11, 92, 255, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.btn-primary:hover .btn-icon {
+    transform: translateX(4px);
+}
+
+/* ========== QUICK INFO ========== */
+.quick-info {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.info-icon {
+    width: 24px;
+    height: 24px;
+    background: #dcfce7;
+    color: #16a34a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ========== USERS LIST ========== */
+.users-list ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.user-item:hover {
+    background: #fff;
+    border-color: #0b5cff;
+    transform: translateX(4px);
+}
+
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #0b5cff 0%, #2d7aff 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.user-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-name {
+    color: #1f2937;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.user-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.user-status.online {
+    color: #16a34a;
+}
+
+.user-status.online .status-dot {
+    background: #16a34a;
+}
+
+.user-status.in-call {
+    color: #ea580c;
+}
+
+.user-status.in-call .status-dot {
+    background: #ea580c;
+}
+
+.user-status.offline {
+    color: #9ca3af;
+}
+
+.user-status.offline .status-dot {
+    background: #9ca3af;
+}
+
+/* ========== EMPTY STATE ========== */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.empty-state p {
+    color: #6b7280;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state small {
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 640px) {
+    .lobby-container {
+        padding: 1rem;
+    }
+
+    .section-card {
+        padding: 1.5rem;
+    }
+
+    .logo h1 {
+        font-size: 2rem;
+    }
+
+    .tagline {
+        font-size: 1rem;
+    }
+}
+</style>
+
 <script>
+// Show/hide password field based on checkbox
+document.getElementById('private-checkbox').onchange = function(e) {
+    const passwordGroup = document.getElementById('password-group');
+    const passwordField = document.getElementById('password-field');
+    
+    if (e.target.checked) {
+        passwordGroup.style.display = 'flex';
+        passwordField.required = true;
+    } else {
+        passwordGroup.style.display = 'none';
+        passwordField.required = false;
+        passwordField.value = '';
+    }
+}
+
+// Form submission
 document.getElementById('form').onsubmit = async (e) => {
     e.preventDefault()
 
-    const room = e.target.room.value.toUpperCase()
+    const room = e.target.room.value.trim().toUpperCase()
     const isPrivate = e.target.private.checked
     const password = e.target.password.value
+
+    if (!room) {
+        alert("❌ Please enter a room name")
+        return
+    }
+
+    // Add loading state to button
+    const submitBtn = e.target.querySelector('.btn-primary');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span>Joining...</span>';
+    submitBtn.disabled = true;
 
     try {
         const params = new URLSearchParams({
@@ -71,6 +496,8 @@ document.getElementById('form').onsubmit = async (e) => {
 
         if (!roomRes.ok) {
             alert("❌ Wrong password or room error")
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
             return
         }
 
@@ -83,7 +510,10 @@ document.getElementById('form').onsubmit = async (e) => {
 
         window.location.href = `/room/?room=${room}`
     } catch (err) {
-        alert("Something went wrong")
+        alert("❌ Something went wrong. Please try again.")
+        console.error(err)
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }
 }
 </script>

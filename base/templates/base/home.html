@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyChat</title>
+    <link rel="stylesheet" href="{% static 'styles/main.css' %}">
+</head>
+<body class="bw">
+
+<div class="home">
+    <h1>MyChat</h1>
+    <p>Simple & secure video calling</p>
+
+    <div class="home-actions">
+        <a href="{% url 'login' %}" class="bw-btn">Login</a>
+        <a href="{% url 'register' %}" class="bw-btn outline">Register</a>
+    </div>
+</div>
+
+</body>
+</html>
